@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +12,8 @@ namespace Models
     {
         private DateTime dateTime;
 
+        //odpowiednik IsConcurencyToken w konfiguracji
+        //[ConcurrencyCheck]
         public /*virtual*/ DateTime DateTime
         {
             get => dateTime;

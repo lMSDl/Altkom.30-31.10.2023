@@ -11,67 +11,47 @@ using System.Security.Cryptography.X509Certificates;
 using var connection = new SqlConnection(@"Server=(local)\SQLEXPRESS;Database=EFCore;Integrated Security=true;TrustServerCertificate=True");//Encrypt=True
 
 var contextOptions = new DbContextOptionsBuilder<Context>()
-                        .UseSqlServer(connection) 
+                        .UseSqlServer(connection)
                         //.UseChangeTrackingProxies()
+                        //Włączenie opóźnionego ładowania - wymaga wirtualizacji właściwości referencji
+                        //.UseLazyLoadingProxies()
                         .LogTo(Console.WriteLine)
                         .Options;
 
-var context = new Context(contextOptions);
+Transactions(contextOptions, false);
 
-context.Database.EnsureDeleted();
-context.Database.EnsureCreated();
+Product product;
 
-var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x }).ToList();
-var orders = Enumerable.Range(0, 5).Select(x => new Order { DateTime = DateTime.Now.AddMinutes(-1.23f * x) }).ToList();
-
-context.RandomFail = true;
-
-using (var transaction = context.Database.BeginTransaction())
+using (var context = new Context(contextOptions))
 {
-    //using var context2 = new Context(contextOptions);
-    //context2.Database.UseTransaction(transaction.GetDbTransaction());
+    //EagerLoading
+    product = context.Set<Product>()./*AsSplitQuery().*/Include(x => x.Order).ThenInclude(x => x.Products).First();
+}
 
-    for (int i = 0; i < orders.Count; i++)
-    {
-        string savepoint = i.ToString();
-        try
-        {
-            transaction.CreateSavepoint(savepoint);
+using (var context = new Context(contextOptions))
+{
+    product = context.Set<Product>().First();
 
-            var subProducts = products.Skip(i * 10).Take(10).ToList();
+    //ExplicitLoading
+    context.Entry(product).Reference(x => x.Order).Load();
+    context.Entry(product.Order).Collection(x => x.Products).Load();
 
-            foreach (var product in subProducts)
-            {
-                context.Add(product);
-                context.SaveChanges();
-            }
-
-            var order = orders[i];
-            order.Products = subProducts;
-            context.Add(order);
-
-            context.SaveChanges();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(context.ChangeTracker.DebugView.ShortView);
-            //transaction.Rollback();
-            transaction.RollbackToSavepoint(savepoint);
-            Console.WriteLine(context.ChangeTracker.DebugView.ShortView);
-        }
-
-        context.ChangeTracker.Clear();
-    }
-
-
-    transaction.Commit();
+    //context.Set<Order>().Where(x => x.Id == context.Entry(product).Property<int>("OrderId").CurrentValue).Load();
 }
 
 
+using (var context = new Context(contextOptions))
+{
+    product = context.Set<Product>().First();
+    //LazyLoading
+    if (product.Order != null)
+        Console.WriteLine("Order != null");
+}
 
+ 
+Console.ReadLine();
 
-
-static void ChangeTracker(DbContextOptions<Context> contextOptions)
+    static void ChangeTracker(DbContextOptions<Context> contextOptions)
 {
     var order = new Order() { };
     var product = new Product() { Name = "Marchewka", Price = 15 };
@@ -337,4 +317,58 @@ static void ShadowProperty_QueryFilters(DbContextOptions<Context> contextOptions
 
     product = context.Set<Product>().IgnoreQueryFilters().First();
     context.ChangeTracker.Clear();
+}
+
+static void Transactions(DbContextOptions<Context> contextOptions, bool randomFail)
+{
+    var context = new Context(contextOptions);
+
+    context.Database.EnsureDeleted();
+    context.Database.EnsureCreated();
+
+    var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x }).ToList();
+    var orders = Enumerable.Range(0, 5).Select(x => new Order { DateTime = DateTime.Now.AddMinutes(-1.23f * x) }).ToList();
+
+    context.RandomFail = randomFail;
+
+    using (var transaction = context.Database.BeginTransaction())
+    {
+        //using var context2 = new Context(contextOptions);
+        //context2.Database.UseTransaction(transaction.GetDbTransaction());
+
+        for (int i = 0; i < orders.Count; i++)
+        {
+            string savepoint = i.ToString();
+            try
+            {
+                transaction.CreateSavepoint(savepoint);
+
+                var subProducts = products.Skip(i * 10).Take(10).ToList();
+
+                foreach (var product in subProducts)
+                {
+                    context.Add(product);
+                    context.SaveChanges();
+                }
+
+                var order = orders[i];
+                order.Products = subProducts;
+                context.Add(order);
+
+                context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(context.ChangeTracker.DebugView.ShortView);
+                //transaction.Rollback();
+                transaction.RollbackToSavepoint(savepoint);
+                Console.WriteLine(context.ChangeTracker.DebugView.ShortView);
+            }
+
+            context.ChangeTracker.Clear();
+        }
+
+
+        transaction.Commit();
+    }
 }

@@ -24,6 +24,6 @@ namespace Models
             }
         }
         public /*virtual*/ string? Name { get; set; }
-        public /*virtual*/ ICollection<Product> Products { get; set; } = new ObservableCollection<Product>();
+        public virtual ICollection<Product> Products { get; set; } = new ObservableCollection<Product>();
     }
 }

@@ -13,7 +13,7 @@ namespace DAL.Configurations
     {
         public void Configure(EntityTypeBuilder<Product> builder)
         {
-            builder.HasOne(x => x.Order).WithMany(x => x.Procuts).IsRequired();
+            builder.HasOne(x => x.Order).WithMany(x => x.Products).IsRequired();
         }
     }
 }

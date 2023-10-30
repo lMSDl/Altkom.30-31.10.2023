@@ -65,6 +65,9 @@ context.SaveChanges();
 context.ChangeTracker.Clear();
 
 product = context.Set<Product>()/*.Where(x => !x.IsDeleted)*/.First();
+
+
+product = context.Set<Product>().IgnoreQueryFilters().First();
 context.ChangeTracker.Clear();
 
 

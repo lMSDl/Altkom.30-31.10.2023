@@ -9,8 +9,18 @@ namespace Models
 {
     public class Order : Entity
     {
-        public virtual DateTime DateTime { get; set; }
-        public virtual string? Name { get; set; }
-        public virtual ICollection<Product> Products { get; set; } = new ObservableCollection<Product>();
+        private DateTime dateTime;
+
+        public /*virtual*/ DateTime DateTime
+        {
+            get => dateTime;
+            set
+            {
+                dateTime = value;
+                OnPropertyChanged();
+            }
+        }
+        public /*virtual*/ string? Name { get; set; }
+        public /*virtual*/ ICollection<Product> Products { get; set; } = new ObservableCollection<Product>();
     }
 }

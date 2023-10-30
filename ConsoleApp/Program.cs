@@ -6,7 +6,7 @@ using Models;
 
 var contextOptions = new DbContextOptionsBuilder<Context>()
                         .UseSqlServer(@"Server=(local)\SQLEXPRESS;Database=EFCore;Integrated Security=true;TrustServerCertificate=True") //Encrypt=True
-                        .UseChangeTrackingProxies()
+                        //.UseChangeTrackingProxies()
                         //.LogTo(Console.WriteLine)
                         .Options;
 
@@ -21,8 +21,8 @@ using (var context = new Context(contextOptions))
     context.Database.EnsureDeleted();
     context.Database.EnsureCreated();
 
-    order = context.CreateProxy<Order>() ;
-    product = context.CreateProxy<Product>(x => { x.Name = product.Name; x.Price = product.Price; }) ;
+    /*order = context.CreateProxy<Order>() ;
+    product = context.CreateProxy<Product>(x => { x.Name = product.Name; x.Price = product.Price; }) ;*/
     order.Products.Add(product);
 
     Console.WriteLine("Order przed dodaniem do kontekstu: " + context.Entry(order).State);
@@ -39,6 +39,7 @@ using (var context = new Context(contextOptions))
     Console.WriteLine("Product po zapisie do bazy: " + context.Entry(product).State);
 
     order.DateTime = DateTime.Now;
+    order.Name = "alamakota";
     Console.WriteLine("Order po zmianie daty: " + context.Entry(order).State);
     Console.WriteLine("Order DateTime zmodyfikowany? " + context.Entry(order).Property(x => x.DateTime).IsModified);
     Console.WriteLine("Order Products zmodyfikowany? " + context.Entry(order).Collection(x => x.Products).IsModified);

@@ -6,6 +6,7 @@ using Models;
 
 var contextOptions = new DbContextOptionsBuilder<Context>()
                         .UseSqlServer(@"Server=(local)\SQLEXPRESS;Database=EFCore;Integrated Security=true;TrustServerCertificate=True") //Encrypt=True
+                        .UseChangeTrackingProxies()
                         //.LogTo(Console.WriteLine)
                         .Options;
 
@@ -16,11 +17,12 @@ var product = new Product() { Name = "Marchewka", Price = 15 };
 using (var context = new Context(contextOptions))
 {
     //wyłączenie automatycznego wykrywania zmian
-    //context.ChangeTracker.AutoDetectChangesEnabled = false;
+    context.ChangeTracker.AutoDetectChangesEnabled = false;
     context.Database.EnsureDeleted();
     context.Database.EnsureCreated();
 
-
+    order = context.CreateProxy<Order>() ;
+    product = context.CreateProxy<Product>(x => { x.Name = product.Name; x.Price = product.Price; }) ;
     order.Products.Add(product);
 
     Console.WriteLine("Order przed dodaniem do kontekstu: " + context.Entry(order).State);
@@ -68,10 +70,12 @@ using (var context = new Context(contextOptions))
     Console.WriteLine("Order Name zmodyfikowany? " + context.Entry(order).Property(x => x.Name).IsModified);
     Console.WriteLine("Order Products zmodyfikowany? " + context.Entry(order).Collection(x => x.Products).IsModified);
     context.SaveChanges();
-}
+    /*}
 
-using (var context = new Context(contextOptions))
-{
+    using (var context = new Context(contextOptions))
+    {*/
+    context.ChangeTracker.Clear(); //wyczyszczenie kontekstu - alternatywa do tworzenia nowego kontekstu
+
     //AutoDetectChanges działa w przypadku wywołania: SaveChanges, Local, Entry
     //context.ChangeTracker.AutoDetectChangesEnabled = true;
 

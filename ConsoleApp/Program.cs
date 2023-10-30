@@ -19,12 +19,12 @@ context.Database.EnsureCreated();
 
     for (int i = 0; i < 17; i++)
     {
-        var order = new Order() { };
-        order.DateTime = DateTime.Now;
+        var o = new Order() { };
+        o.DateTime = DateTime.Now;
         var orderProduct = new Product() { Name = "Marchewka", Price = 15 };
-        order.Products.Add(orderProduct);
+        o.Products.Add(orderProduct);
 
-        context.Add(order);
+        context.Add(o);
     }
 
     context.SaveChanges();
@@ -43,6 +43,29 @@ context.Entry(product).Property("OrderId").CurrentValue = 1;
 context.SaveChanges();
 
 
+
+context.Entry(product).Property("IsDeleted").CurrentValue = true;
+//product.IsDeleted = true;
+context.SaveChanges();
+
+context.ChangeTracker.Clear();
+
+var products = context.Set<Product>()/*.Where(x => !x.IsDeleted)*/.ToList();
+
+context.ChangeTracker.Clear();
+
+var order = context.Set<Order>().Find(1);
+products = context.Set<Product>()/*.Where(x => !x.IsDeleted)*/.Where(x => EF.Property<int>(x, "OrderId") == 1).ToList();
+
+
+context.Entry(order).Property("IsDeleted").CurrentValue = true;
+//order.IsDeleted = true;
+context.SaveChanges();
+
+context.ChangeTracker.Clear();
+
+product = context.Set<Product>()/*.Where(x => !x.IsDeleted)*/.First();
+context.ChangeTracker.Clear();
 
 
 

@@ -6,6 +6,7 @@ namespace Models
     public abstract class Entity : INotifyPropertyChanged
     {
         public /*virtual*/ int Id { get; set; }
+        //public bool IsDeleted { get; set; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

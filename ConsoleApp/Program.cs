@@ -106,4 +106,41 @@ using (var context = new Context(contextOptions))
     Console.WriteLine(context.ChangeTracker.DebugView.ShortView);
     Console.WriteLine(context.ChangeTracker.DebugView.LongView);
 
+
+    context.ChangeTracker.Clear();
+
+    var products = new List<Product>() {
+        new Product() {Name = "P1", Order = new Order {Id = 60, DateTime = DateTime.Now}},
+        new Product() {Name = "P2", Order = new Order()}
+    };
+    //context.AddRange(products);
+
+    foreach (var p in products)
+    {
+        
+        context.ChangeTracker.TrackGraph(p.Order, entityEntry =>
+        {
+            if(entityEntry.Entry.IsKeySet)
+            {
+                entityEntry.Entry.State = EntityState.Unchanged;
+            }
+            else
+            {
+                entityEntry.Entry.State = EntityState.Added;
+            }
+        }); 
+        context.ChangeTracker.TrackGraph(p, entityEntry =>
+        {
+            entityEntry.Entry.State = EntityState.Added;
+        });
+
+    }
+
+    Console.WriteLine(context.ChangeTracker.DebugView.LongView);
+
+    //context.SaveChanges();
+
+
+
 }
+

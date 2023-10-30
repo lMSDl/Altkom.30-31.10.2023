@@ -12,72 +12,35 @@ var contextOptions = new DbContextOptionsBuilder<Context>()
                         .Options;
 
 
-using var context = new Context(contextOptions);
+var context = new Context(contextOptions);
 
 context.Database.EnsureDeleted();
 context.Database.EnsureCreated();
 
-var order = new Order() { };
-order.DateTime = DateTime.Now;
-
-context.Add(order);
-context.SaveChanges();
-
-
-order.DateTime = DateTime.Now.AddMinutes(100);
-//order.Name = "alamakota";
-
-context.SaveChanges();
-
-var product = new Product() { Order = order, Name = "Marchewka", Price = 15 };
-
-context.Add(product);
-context.SaveChanges();
-
-
-product.Price = product.Price * 1.1f;
-
-var saved = false;
-do
-{
-    try
+    for (int i = 0; i < 17; i++)
     {
-        context.SaveChanges();
-        saved = true;
+        var order = new Order() { };
+        order.DateTime = DateTime.Now;
+        var orderProduct = new Product() { Name = "Marchewka", Price = 15 };
+        order.Products.Add(orderProduct);
+
+        context.Add(order);
     }
-    catch (DbUpdateConcurrencyException e)
-    {
 
-        foreach (var entry in e.Entries)
-        {
+    context.SaveChanges();
 
-            //wartości jakie chcmy wprowadzić do bazy
-            var currentValues = entry.CurrentValues;
-            //wartości jakie pobraliśmy z bazy (historyczne)
-            var originalValues = entry.OriginalValues;
-            //wartości jakie są aktualnie w bazie danych
-            var databaseValues = entry.GetDatabaseValues();
+context.ChangeTracker.Clear();
 
-            switch (entry.Entity)
-            {
-                case Product:
+var product = context.Set<Product>().Skip(5).First();
 
-                    var property = currentValues.Properties.Single(x => x.Name == nameof(Product.Price));
-                    var currentPrice = (float)currentValues[property];
-                    var originalPrice = (float)originalValues[property];
-                    var databasePrice = (float)databaseValues[property];
+//odczytywanie wartości ShadowProperty
+var orderId = context.Entry(product).Property<int>("OrderId").CurrentValue;
+orderId = context.Set<Product>().Skip(4).Select(x => EF.Property<int>(x, "OrderId")).First();
+orderId = context.Set<Product>().Skip(4).Select(x => x.Order.Id).First();
+Console.WriteLine(orderId);
 
-                    currentPrice = databasePrice + (currentPrice - originalPrice);
-
-                    currentValues[property] = currentPrice;
-
-                    break;
-            }
-            entry.OriginalValues.SetValues(databaseValues);
-        }
-
-    }
-} while (!saved);
+context.Entry(product).Property("OrderId").CurrentValue = 1;
+context.SaveChanges();
 
 
 
@@ -220,3 +183,73 @@ static void ChangeTracker(DbContextOptions<Context> contextOptions)
     }
 }
 
+static Context ConcurrencyToken(DbContextOptions<Context> contextOptions)
+{
+    var context = new Context(contextOptions);
+
+    context.Database.EnsureDeleted();
+    context.Database.EnsureCreated();
+
+    var order = new Order() { };
+    order.DateTime = DateTime.Now;
+
+    context.Add(order);
+    context.SaveChanges();
+
+
+    order.DateTime = DateTime.Now.AddMinutes(100);
+    //order.Name = "alamakota";
+
+    context.SaveChanges();
+
+    var product = new Product() { Order = order, Name = "Marchewka", Price = 15 };
+
+    context.Add(product);
+    context.SaveChanges();
+
+
+    product.Price = product.Price * 1.1f;
+
+    var saved = false;
+    do
+    {
+        try
+        {
+            context.SaveChanges();
+            saved = true;
+        }
+        catch (DbUpdateConcurrencyException e)
+        {
+
+            foreach (var entry in e.Entries)
+            {
+
+                //wartości jakie chcmy wprowadzić do bazy
+                var currentValues = entry.CurrentValues;
+                //wartości jakie pobraliśmy z bazy (historyczne)
+                var originalValues = entry.OriginalValues;
+                //wartości jakie są aktualnie w bazie danych
+                var databaseValues = entry.GetDatabaseValues();
+
+                switch (entry.Entity)
+                {
+                    case Product:
+
+                        var property = currentValues.Properties.Single(x => x.Name == nameof(Product.Price));
+                        var currentPrice = (float)currentValues[property];
+                        var originalPrice = (float)originalValues[property];
+                        var databasePrice = (float)databaseValues[property];
+
+                        currentPrice = databasePrice + (currentPrice - originalPrice);
+
+                        currentValues[property] = currentPrice;
+
+                        break;
+                }
+                entry.OriginalValues.SetValues(databaseValues);
+            }
+
+        }
+    } while (!saved);
+    return context;
+}

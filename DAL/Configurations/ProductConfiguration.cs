@@ -15,7 +15,10 @@ namespace DAL.Configurations
         {
             builder.HasOne(x => x.Order).WithMany(x => x.Products).IsRequired();
 
-            builder.Property(x => x.Timestamp).IsRowVersion();
+            builder/*.Property(x => x.Timestamp)*/
+                //konfiguracja shadow property    
+                .Property<byte[]>("Timestamp")
+                    .IsRowVersion();
         }
     }
 }

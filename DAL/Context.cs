@@ -17,5 +17,15 @@ namespace DAL
             //modelBuilder.HasChangeTrackingStrategy(ChangeTrackingStrategy.ChangedNotifications);
         }
 
+        public bool RandomFail { get; set; }
+        public override int SaveChanges()
+        {
+            if (RandomFail && new Random((int)DateTime.Now.Ticks).Next(1, 50) == 1)
+                throw new Exception();
+
+
+            return base.SaveChanges();
+        }
+
     }
 }

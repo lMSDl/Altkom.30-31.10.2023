@@ -1,74 +1,72 @@
 ﻿
 
 using DAL;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Models;
 using System.Security.Cryptography.X509Certificates;
 
+
+using var connection = new SqlConnection(@"Server=(local)\SQLEXPRESS;Database=EFCore;Integrated Security=true;TrustServerCertificate=True");//Encrypt=True
+
 var contextOptions = new DbContextOptionsBuilder<Context>()
-                        .UseSqlServer(@"Server=(local)\SQLEXPRESS;Database=EFCore;Integrated Security=true;TrustServerCertificate=True") //Encrypt=True
+                        .UseSqlServer(connection) 
                         //.UseChangeTrackingProxies()
                         .LogTo(Console.WriteLine)
                         .Options;
-
 
 var context = new Context(contextOptions);
 
 context.Database.EnsureDeleted();
 context.Database.EnsureCreated();
 
-    for (int i = 0; i < 17; i++)
-    {
-        var o = new Order() { };
-        o.DateTime = DateTime.Now;
-        var orderProduct = new Product() { Name = "Marchewka", Price = 15 };
-        o.Products.Add(orderProduct);
+var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x }).ToList();
+var orders = Enumerable.Range(0, 5).Select(x => new Order { DateTime = DateTime.Now.AddMinutes(-1.23f * x) }).ToList();
 
-        context.Add(o);
+context.RandomFail = true;
+
+using (var transaction = context.Database.BeginTransaction())
+{
+    //using var context2 = new Context(contextOptions);
+    //context2.Database.UseTransaction(transaction.GetDbTransaction());
+
+    for (int i = 0; i < orders.Count; i++)
+    {
+        string savepoint = i.ToString();
+        try
+        {
+            transaction.CreateSavepoint(savepoint);
+
+            var subProducts = products.Skip(i * 10).Take(10).ToList();
+
+            foreach (var product in subProducts)
+            {
+                context.Add(product);
+                context.SaveChanges();
+            }
+
+            var order = orders[i];
+            order.Products = subProducts;
+            context.Add(order);
+
+            context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(context.ChangeTracker.DebugView.ShortView);
+            //transaction.Rollback();
+            transaction.RollbackToSavepoint(savepoint);
+            Console.WriteLine(context.ChangeTracker.DebugView.ShortView);
+        }
+
+        context.ChangeTracker.Clear();
     }
 
-    context.SaveChanges();
 
-context.ChangeTracker.Clear();
+    transaction.Commit();
+}
 
-var product = context.Set<Product>().Skip(5).First();
-
-//odczytywanie wartości ShadowProperty
-var orderId = context.Entry(product).Property<int>("OrderId").CurrentValue;
-orderId = context.Set<Product>().Skip(4).Select(x => EF.Property<int>(x, "OrderId")).First();
-orderId = context.Set<Product>().Skip(4).Select(x => x.Order.Id).First();
-Console.WriteLine(orderId);
-
-context.Entry(product).Property("OrderId").CurrentValue = 1;
-context.SaveChanges();
-
-
-
-context.Entry(product).Property("IsDeleted").CurrentValue = true;
-//product.IsDeleted = true;
-context.SaveChanges();
-
-context.ChangeTracker.Clear();
-
-var products = context.Set<Product>()/*.Where(x => !x.IsDeleted)*/.ToList();
-
-context.ChangeTracker.Clear();
-
-var order = context.Set<Order>().Find(1);
-products = context.Set<Product>()/*.Where(x => !x.IsDeleted)*/.Where(x => EF.Property<int>(x, "OrderId") == 1).ToList();
-
-
-context.Entry(order).Property("IsDeleted").CurrentValue = true;
-//order.IsDeleted = true;
-context.SaveChanges();
-
-context.ChangeTracker.Clear();
-
-product = context.Set<Product>()/*.Where(x => !x.IsDeleted)*/.First();
-
-
-product = context.Set<Product>().IgnoreQueryFilters().First();
-context.ChangeTracker.Clear();
 
 
 
@@ -278,4 +276,65 @@ static Context ConcurrencyToken(DbContextOptions<Context> contextOptions)
         }
     } while (!saved);
     return context;
+}
+
+static void ShadowProperty_QueryFilters(DbContextOptions<Context> contextOptions)
+{
+    var context = new Context(contextOptions);
+
+    context.Database.EnsureDeleted();
+    context.Database.EnsureCreated();
+
+    for (int i = 0; i < 17; i++)
+    {
+        var o = new Order() { };
+        o.DateTime = DateTime.Now;
+        var orderProduct = new Product() { Name = "Marchewka", Price = 15 };
+        o.Products.Add(orderProduct);
+
+        context.Add(o);
+    }
+
+    context.SaveChanges();
+
+    context.ChangeTracker.Clear();
+
+    var product = context.Set<Product>().Skip(5).First();
+
+    //odczytywanie wartości ShadowProperty
+    var orderId = context.Entry(product).Property<int>("OrderId").CurrentValue;
+    orderId = context.Set<Product>().Skip(4).Select(x => EF.Property<int>(x, "OrderId")).First();
+    orderId = context.Set<Product>().Skip(4).Select(x => x.Order.Id).First();
+    Console.WriteLine(orderId);
+
+    context.Entry(product).Property("OrderId").CurrentValue = 1;
+    context.SaveChanges();
+
+
+
+    context.Entry(product).Property("IsDeleted").CurrentValue = true;
+    //product.IsDeleted = true;
+    context.SaveChanges();
+
+    context.ChangeTracker.Clear();
+
+    var products = context.Set<Product>()/*.Where(x => !x.IsDeleted)*/.ToList();
+
+    context.ChangeTracker.Clear();
+
+    var order = context.Set<Order>().Find(1);
+    products = context.Set<Product>()/*.Where(x => !x.IsDeleted)*/.Where(x => EF.Property<int>(x, "OrderId") == 1).ToList();
+
+
+    context.Entry(order).Property("IsDeleted").CurrentValue = true;
+    //order.IsDeleted = true;
+    context.SaveChanges();
+
+    context.ChangeTracker.Clear();
+
+    product = context.Set<Product>()/*.Where(x => !x.IsDeleted)*/.First();
+
+
+    product = context.Set<Product>().IgnoreQueryFilters().First();
+    context.ChangeTracker.Clear();
 }

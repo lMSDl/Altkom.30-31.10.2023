@@ -32,10 +32,10 @@ namespace DAL.Configurations
 
             //builder.Property(x => x.OrderType).HasConversion(new EnumToStringConverter<OrderTypes>());
             builder.Property(x => x.OrderType).HasConversion<string>();
-            /*builder.Property(x => x.Parameters).HasConversion(
+            builder.Property(x => x.Parameters).HasConversion(
                 x => string.Join(',',Enum.GetValues<Parameters>().Where(xx => x.HasFlag(xx)).Select(xx => xx.ToString())),
                 x => x.Split(',', StringSplitOptions.None).Select(xx => Enum.Parse<Parameters>(xx)).Aggregate((a, b) => a | b)
-                );*/
+                );
         }
     }
 }

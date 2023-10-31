@@ -9,9 +9,9 @@ namespace Models
     [Flags]
     public enum Parameters
     {
-        Cash = 1 << 1,
-        Card = 1 << 2,
-        Shipping = 1 << 3,
-        Gift = 1 << 4
+        Cash = 1 << 0,
+        Card = 1 << 1,
+        Shipping = 1 << 2,
+        Gift = 1 << 3
     }
 }

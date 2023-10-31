@@ -314,7 +314,7 @@ static void Transactions(DbContextOptions<Context> contextOptions, bool randomFa
         Name = "Zamówienie " + context.Database.SqlQuery<int>($"SELECT NEXT VALUE FOR OrderNumber").AsEnumerable().Single(),
         DateTime = DateTime.Now.AddMinutes(-1.23f * x),
         OrderType = (OrderTypes)(x % 3),
-        Parameters = (Parameters)(x % 3)
+        Parameters = (Parameters)(x % 4) + 1
     })
         .ToList();
 

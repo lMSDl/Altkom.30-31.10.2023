@@ -304,7 +304,15 @@ static void Transactions(DbContextOptions<Context> contextOptions, bool randomFa
     context.Database.EnsureCreated();
 
     var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x }).ToList();
-    var orders = Enumerable.Range(0, 5).Select(x => new Order { Name = "Zamówienie " + context.Database.SqlQuery<int>($"SELECT NEXT VALUE FOR OrderNumber").AsEnumerable().Single(), DateTime = DateTime.Now.AddMinutes(-1.23f * x) }).ToList();
+    var orders = Enumerable.Range(0, 5).Select(x => 
+    new Order
+    {
+        Name = "Zamówienie " + context.Database.SqlQuery<int>($"SELECT NEXT VALUE FOR OrderNumber").AsEnumerable().Single(),
+        DateTime = DateTime.Now.AddMinutes(-1.23f * x),
+        OrderType = (OrderTypes)(x % 3),
+        Parameters = (Parameters)(x % 3)
+    })
+        .ToList();
 
     context.RandomFail = randomFail;
 

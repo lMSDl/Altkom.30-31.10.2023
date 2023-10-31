@@ -45,5 +45,8 @@ namespace Models
         //public string Description => $"{Name}: {DateTime}";
         public string? Description { get; }
 
+        public OrderTypes OrderType { get; set; }
+
+        public Parameters Parameters { get; set; }
     }
 }

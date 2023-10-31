@@ -1,4 +1,5 @@
 ﻿using DAL.Conventions;
+using DAL.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Models;
@@ -50,6 +51,11 @@ namespace DAL
                     x.SetTableName(new Pluralizer().Pluralize(x.GetDefaultTableName()));
                 });*/
 
+            modelBuilder.Model.GetEntityTypes().SelectMany(x => x.GetProperties())
+                .Where(x => x.ClrType == typeof(string))
+                .Where(x => x.PropertyInfo?.CanWrite ?? false)
+                .ToList()
+                .ForEach(x => x.SetValueConverter(new ObfuscationConverter()));
 
             modelBuilder.UsePropertyAccessMode(PropertyAccessMode.PreferProperty); //domyślna wartość: PropertyAccessMode.PreferField
 

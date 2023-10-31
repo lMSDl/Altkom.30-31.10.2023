@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Models;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,18 @@ namespace DAL.Configurations
 
             builder.Property(x => x.Name).HasField("zuzia");
             builder.Property(x => x.Number).HasDefaultValueSql("NEXT VALUE FOR OrderNumber");
+
+            /*builder.Property(x => x.OrderType).HasConversion(
+                x => x.ToString(),
+                x => Enum.Parse<OrderTypes>(x)
+                );*/
+
+            //builder.Property(x => x.OrderType).HasConversion(new EnumToStringConverter<OrderTypes>());
+            builder.Property(x => x.OrderType).HasConversion<string>();
+            /*builder.Property(x => x.Parameters).HasConversion(
+                x => string.Join(',',Enum.GetValues<Parameters>().Where(xx => x.HasFlag(xx)).Select(xx => xx.ToString())),
+                x => x.Split(',', StringSplitOptions.None).Select(xx => Enum.Parse<Parameters>(xx)).Aggregate((a, b) => a | b)
+                );*/
         }
     }
 }

@@ -25,7 +25,7 @@ namespace DAL
             base.OnConfiguring(optionsBuilder);
 
             if (!optionsBuilder.IsConfigured)
-                optionsBuilder.UseSqlServer();
+                optionsBuilder.UseSqlServer(x => x.UseNetTopologySuite());
         }
 
         public static Func<Context, DateTime, DateTime, IEnumerable<Order>> GetOrdersByDateRange { get; } =

@@ -5,6 +5,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Models;
+using NetTopologySuite.Geometries;
 using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 
@@ -12,7 +13,7 @@ using System.Security.Cryptography.X509Certificates;
 using var connection = new SqlConnection(@"Server=(local)\SQLEXPRESS;Database=EFCore;Integrated Security=true;TrustServerCertificate=True");//Encrypt=True
 
 var contextOptions = new DbContextOptionsBuilder<Context>()
-                        .UseSqlServer(connection)
+                        .UseSqlServer(connection, x => x.UseNetTopologySuite())
                         //.UseChangeTrackingProxies()
                         //Włączenie opóźnionego ładowania - wymaga wirtualizacji właściwości referencji
                         //.UseLazyLoadingProxies()
@@ -37,6 +38,35 @@ var result = context.Set<OrderSummary>().FromSqlRaw("EXEC OrderSummary @p0", 3).
 var view = context.Set<OrderSummary>().Where(x => x.Id > 2).ToList();
 
 Console.ReadLine();
+
+
+{
+    var order = context.Set<Order>().OrderBy(x => x.Id).Skip(1).First();
+
+    var point = new Point(52, 21) { SRID = 4326 };
+
+    var distance = point.Distance(order.DeliveryPoint);
+
+    var intersect = point.Intersects(order.DeliveryPoint);
+
+    var polygon = new Polygon(new LinearRing(new Coordinate[] { new Coordinate(52, 21),
+                                                                new Coordinate(51, 20),
+                                                                new Coordinate(52, 19),
+                                                                new Coordinate(53, 20),
+                                                                new Coordinate(52, 21)}))
+    { SRID = 4326 };
+
+    intersect = polygon.Intersects(order.DeliveryPoint);
+
+
+    var orders = context.Set<Order>().Where(x => x.DeliveryPoint.Intersects(polygon)).ToList();
+    orders = context.Set<Order>().OrderBy(x => x.DeliveryPoint.Distance(point)).ToList();
+    orders = context.Set<Order>().Where(x => point.IsWithinDistance(x.DeliveryPoint, 0.5)).ToList();
+}
+
+
+
+
 
 static void ChangeTracker(DbContextOptions<Context> contextOptions)
 {
@@ -323,8 +353,9 @@ static void Transactions(DbContextOptions<Context> contextOptions, bool randomFa
         Name = "Zamówienie " + context.Database.SqlQuery<int>($"SELECT NEXT VALUE FOR OrderNumber").AsEnumerable().Single(),
         DateTime = DateTime.Now.AddMinutes(-1.23f * x),
         OrderType = (OrderTypes)(x % 3),
-        Parameters = (Parameters)(x % 4) + 1
-    })
+        Parameters = (Parameters)(x % 4) + 1,
+        DeliveryPoint = new NetTopologySuite.Geometries.Point(52 - x / 10f, 21 - x / 10f) { SRID = 4326 }
+})
         .ToList();
 
     context.RandomFail = randomFail;

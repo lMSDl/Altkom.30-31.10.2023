@@ -38,6 +38,8 @@ namespace Models
                 zuzia = value;
             }
         }
+        public int Number { get; set; }
+
         public virtual ICollection<Product> Products { get; set; } = new ObservableCollection<Product>();
 
         //public string Description => $"{Name}: {DateTime}";

@@ -22,6 +22,7 @@ namespace DAL.Configurations
             builder.Property(x => x.Description).HasComputedColumnSql("[Name] + ': ala ma kota'", stored: true);
 
             builder.Property(x => x.Name).HasField("zuzia");
+            builder.Property(x => x.Number).HasDefaultValueSql("NEXT VALUE FOR OrderNumber");
         }
     }
 }

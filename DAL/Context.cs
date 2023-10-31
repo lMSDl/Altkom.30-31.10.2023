@@ -52,6 +52,14 @@ namespace DAL
 
 
             modelBuilder.UsePropertyAccessMode(PropertyAccessMode.PreferProperty); //domyślna wartość: PropertyAccessMode.PreferField
+
+
+            modelBuilder.HasSequence<int>("OrderNumber")
+                .StartsAt(100)
+                .HasMin(0)
+                .HasMax(900)
+                .IncrementsBy(333)
+                .IsCyclic();
         }
 
 

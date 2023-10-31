@@ -19,6 +19,8 @@ namespace DAL.Configurations
                 xx.HasPeriodEnd("To"); //domyślnie: PeriodEnd
             }));
 
+
+            builder.Property(x => x.Description).IsSparse();
         }
     }
 }

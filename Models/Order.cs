@@ -12,6 +12,13 @@ namespace Models
     {
         private DateTime dateTime;
 
+        //nazwy backfielda, które zgodnie z konwencją pasują do nazwy kolumny
+        //private string? name;
+        //private string? _name;
+        //private string? m_name;
+
+        private string? zuzia;
+
         //odpowiednik IsConcurencyToken w konfiguracji
         //[ConcurrencyCheck]
         public /*virtual*/ DateTime DateTime
@@ -23,7 +30,14 @@ namespace Models
                 OnPropertyChanged();
             }
         }
-        public /*virtual*/ string? Name { get; set; }
+        public /*virtual*/ string? Name
+        {
+            get => zuzia;
+            set
+            {
+                zuzia = value;
+            }
+        }
         public virtual ICollection<Product> Products { get; set; } = new ObservableCollection<Product>();
 
         //public string Description => $"{Name}: {DateTime}";

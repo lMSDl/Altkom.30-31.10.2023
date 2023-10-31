@@ -51,7 +51,7 @@ namespace DAL
                 });*/
 
 
-
+            modelBuilder.UsePropertyAccessMode(PropertyAccessMode.PreferProperty); //domyślna wartość: PropertyAccessMode.PreferField
         }
 
 

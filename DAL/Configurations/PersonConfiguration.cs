@@ -13,6 +13,12 @@ namespace DAL.Configurations
     {
         public void Configure(EntityTypeBuilder<Person> builder)
         {
+            builder.ToTable("People", x => x.IsTemporal(xx =>
+            {
+                xx.HasPeriodStart("From"); //domyślnie: PeriodStart
+                xx.HasPeriodEnd("To"); //domyślnie: PeriodEnd
+            }));
+
         }
     }
 }

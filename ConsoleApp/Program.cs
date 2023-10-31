@@ -18,40 +18,51 @@ var contextOptions = new DbContextOptionsBuilder<Context>()
                         .LogTo(Console.WriteLine)
                         .Options;
 
-Transactions(contextOptions, false);
+using var context = new Context(contextOptions);
+context.Database.EnsureDeleted();
+context.Database.EnsureCreated();
 
-Product product;
+var person = new Person { Name = "Ewa" };
 
-using (var context = new Context(contextOptions))
-{
-    //EagerLoading
-    product = context.Set<Product>()./*AsSplitQuery().*/Include(x => x.Order).ThenInclude(x => x.Products).First();
-}
+context.Add(person);
+context.SaveChanges();
 
-using (var context = new Context(contextOptions))
-{
-    product = context.Set<Product>().First();
+Thread.Sleep(1000);
 
-    //ExplicitLoading
-    context.Entry(product).Reference(x => x.Order).Load();
-    context.Entry(product.Order).Collection(x => x.Products).Load();
-
-    //context.Set<Order>().Where(x => x.Id == context.Entry(product).Property<int>("OrderId").CurrentValue).Load();
-}
+person.Name = "Ala";
+context.SaveChanges();
 
 
-using (var context = new Context(contextOptions))
-{
-    product = context.Set<Product>().First();
-    //LazyLoading
-    if (product.Order != null)
-        Console.WriteLine("Order != null");
-}
+Thread.Sleep(1000);
 
- 
+person.Name = "Adam";
+context.SaveChanges();
+
+
+Thread.Sleep(1000);
+
+person.Name = "Wojciech";
+context.SaveChanges();
+
+context.ChangeTracker.Clear();
+
+
+var people = context.Set<Person>().ToList();
+
+people = context.Set<Person>().TemporalAll().ToList();
+var data = context.Set<Person>().TemporalAll().Select(x => new { x, FROM = EF.Property<DateTime>(x, "From"), TO = EF.Property<DateTime>(x, "To") }).ToList();
+
+                                            //MS SQL: data zapisywana w UTC
+people = context.Set<Person>().TemporalAsOf(DateTime.UtcNow.AddSeconds(-2)).ToList();
+
+people = context.Set<Person>().TemporalBetween(DateTime.UtcNow.AddSeconds(-4), DateTime.UtcNow.AddSeconds(-2)).ToList();
+
+
+
+
 Console.ReadLine();
 
-    static void ChangeTracker(DbContextOptions<Context> contextOptions)
+static void ChangeTracker(DbContextOptions<Context> contextOptions)
 {
     var order = new Order() { };
     var product = new Product() { Name = "Marchewka", Price = 15 };
@@ -370,5 +381,38 @@ static void Transactions(DbContextOptions<Context> contextOptions, bool randomFa
 
 
         transaction.Commit();
+    }
+}
+
+static void References(DbContextOptions<Context> contextOptions)
+{
+    Transactions(contextOptions, false);
+
+    Product product;
+
+    using (var context = new Context(contextOptions))
+    {
+        //EagerLoading
+        product = context.Set<Product>()./*AsSplitQuery().*/Include(x => x.Order).ThenInclude(x => x.Products).First();
+    }
+
+    using (var context = new Context(contextOptions))
+    {
+        product = context.Set<Product>().First();
+
+        //ExplicitLoading
+        context.Entry(product).Reference(x => x.Order).Load();
+        context.Entry(product.Order).Collection(x => x.Products).Load();
+
+        //context.Set<Order>().Where(x => x.Id == context.Entry(product).Property<int>("OrderId").CurrentValue).Load();
+    }
+
+
+    using (var context = new Context(contextOptions))
+    {
+        product = context.Set<Product>().First();
+        //LazyLoading
+        if (product.Order != null)
+            Console.WriteLine("Order != null");
     }
 }

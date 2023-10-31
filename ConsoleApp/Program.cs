@@ -19,16 +19,11 @@ var contextOptions = new DbContextOptionsBuilder<Context>()
                         .LogTo(Console.WriteLine)
                         .Options;
 
-var orders = CompileQuery(contextOptions);
+using var context = new Context(contextOptions);
+context.Database.EnsureDeleted();   
+context.Database.Migrate();
 
-foreach (var order in orders)
-{
-    Console.WriteLine(order.Description);
-}
 
-var context = new Context(contextOptions);
-context.AttachRange(orders);
-context.Set<ProductDetails>().Load();
 
 Console.ReadLine();
 
@@ -308,7 +303,7 @@ static void Transactions(DbContextOptions<Context> contextOptions, bool randomFa
     context.Database.EnsureCreated();
 
     var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x, Detail = new ProductDetails { Weight = x } }).ToList();
-    var orders = Enumerable.Range(0, 5).Select(x => 
+    var orders = Enumerable.Range(0, 5).Select(x =>
     new Order
     {
         Name = "Zamówienie " + context.Database.SqlQuery<int>($"SELECT NEXT VALUE FOR OrderNumber").AsEnumerable().Single(),
@@ -458,4 +453,18 @@ static IEnumerable<Order> CompileQuery(DbContextOptions<Context> contextOptions)
 
     Debug.WriteLine(timer.ElapsedTicks);
     return orders;
+}
+
+static void Conversion_SplitTable(DbContextOptions<Context> contextOptions)
+{
+    var orders = CompileQuery(contextOptions);
+
+    foreach (var order in orders)
+    {
+        Console.WriteLine(order.Description);
+    }
+
+    var context = new Context(contextOptions);
+    context.AttachRange(orders);
+    context.Set<ProductDetails>().Load();
 }

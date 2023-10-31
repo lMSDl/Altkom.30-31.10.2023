@@ -11,9 +11,22 @@ namespace DAL
     public class Context : DbContext
     {
 
+        public Context()
+        {
+
+        }
         public Context(DbContextOptions options) : base(options) {
         }
 
+
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+
+            if (!optionsBuilder.IsConfigured)
+                optionsBuilder.UseSqlServer();
+        }
 
         public static Func<Context, DateTime, DateTime, IEnumerable<Order>> GetOrdersByDateRange { get; } =
             EF.CompileQuery((Context context, DateTime from, DateTime to) => 

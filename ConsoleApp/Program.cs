@@ -19,26 +19,12 @@ var contextOptions = new DbContextOptionsBuilder<Context>()
                         .LogTo(Console.WriteLine)
                         .Options;
 
+var orders = CompileQuery(contextOptions);
 
-
-Transactions(contextOptions, false);
-using var context = new Context(contextOptions);
-
-var orders = context.Set<Order>().AsNoTracking().ToList();
-
-var timer = new Stopwatch();
-timer.Start();
-orders = Context.GetOrdersByDateRange(context, DateTime.Now.AddMinutes(-5), DateTime.Now).ToList();
-timer.Stop();
-
-Debug.WriteLine(timer.ElapsedTicks);
-
-timer.Reset();
-timer.Start();
-orders = Context.GetOrdersByDateRange(context, DateTime.Now.AddMinutes(-5), DateTime.Now).ToList();
-timer.Stop();
-
-Debug.WriteLine(timer.ElapsedTicks);
+foreach (var order in orders)
+{
+    Console.WriteLine(order.Description);
+}
 
 Console.ReadLine();
 
@@ -318,7 +304,7 @@ static void Transactions(DbContextOptions<Context> contextOptions, bool randomFa
     context.Database.EnsureCreated();
 
     var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x }).ToList();
-    var orders = Enumerable.Range(0, 5).Select(x => new Order { DateTime = DateTime.Now.AddMinutes(-1.23f * x) }).ToList();
+    var orders = Enumerable.Range(0, 5).Select(x => new Order { Name = "Zamówienie "+x, DateTime = DateTime.Now.AddMinutes(-1.23f * x) }).ToList();
 
     context.RandomFail = randomFail;
 
@@ -437,4 +423,27 @@ static void TemporalTable(DbContextOptions<Context> contextOptions)
     people = context.Set<Person>().TemporalAsOf(DateTime.UtcNow.AddSeconds(-2)).ToList();
 
     people = context.Set<Person>().TemporalBetween(DateTime.UtcNow.AddSeconds(-4), DateTime.UtcNow.AddSeconds(-2)).ToList();
+}
+
+static IEnumerable<Order> CompileQuery(DbContextOptions<Context> contextOptions)
+{
+    Transactions(contextOptions, false);
+    var context = new Context(contextOptions);
+
+    var orders = context.Set<Order>().AsNoTracking().ToList();
+
+    var timer = new Stopwatch();
+    timer.Start();
+    orders = Context.GetOrdersByDateRange(context, DateTime.Now.AddMinutes(-5), DateTime.Now).ToList();
+    timer.Stop();
+
+    Debug.WriteLine(timer.ElapsedTicks);
+
+    timer.Reset();
+    timer.Start();
+    orders = Context.GetOrdersByDateRange(context, DateTime.Now.AddMinutes(-5), DateTime.Now).ToList();
+    timer.Stop();
+
+    Debug.WriteLine(timer.ElapsedTicks);
+    return orders;
 }

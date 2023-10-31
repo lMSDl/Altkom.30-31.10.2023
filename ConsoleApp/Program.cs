@@ -23,7 +23,16 @@ using var context = new Context(contextOptions);
 context.Database.EnsureDeleted();   
 context.Database.Migrate();
 
+Transactions(contextOptions, false, false);
+var multiplier = "-1.1";
+context.Database.ExecuteSqlRaw("EXEC ChangePrice @p0", multiplier);
+context.Database.ExecuteSqlInterpolated($"EXEC ChangePrice {multiplier}");
 
+var result = context.Set<OrderSummary>().FromSqlRaw("EXEC OrderSummary @p0", 3).ToList();
+
+
+context.Set<Person>().Remove(context.Set<Person>().First());
+context.SaveChanges();
 
 Console.ReadLine();
 
@@ -295,12 +304,15 @@ static void ShadowProperty_QueryFilters(DbContextOptions<Context> contextOptions
     context.ChangeTracker.Clear();
 }
 
-static void Transactions(DbContextOptions<Context> contextOptions, bool randomFail)
+static void Transactions(DbContextOptions<Context> contextOptions, bool randomFail, bool drop = true)
 {
     var context = new Context(contextOptions);
 
-    context.Database.EnsureDeleted();
-    context.Database.EnsureCreated();
+    if (drop)
+    {
+        context.Database.EnsureDeleted();
+        context.Database.EnsureCreated();
+    }
 
     var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x, Detail = new ProductDetails { Weight = x } }).ToList();
     var orders = Enumerable.Range(0, 5).Select(x =>

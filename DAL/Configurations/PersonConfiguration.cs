@@ -21,6 +21,12 @@ namespace DAL.Configurations
 
 
             builder.Property(x => x.Description).IsSparse();
+
+            builder.DeleteUsingStoredProcedure("PersonDelete", storedProcedureBuilder =>
+            {
+                storedProcedureBuilder.HasOriginalValueParameter(x => x.Key); //???
+                storedProcedureBuilder.HasRowsAffectedResultColumn();
+            });
         }
     }
 }

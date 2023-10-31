@@ -75,7 +75,7 @@ namespace DAL
 
             //configurationBuilder.Properties<DateTime>().HavePrecision(5);
             configurationBuilder.Conventions.Add(_ => new DateTimePrecision());
-            configurationBuilder.Conventions.Add(_ => new PluralizeTableNames());
+            //configurationBuilder.Conventions.Add(_ => new PluralizeTableNames());
 
             //configurationBuilder.Conventions.Remove(typeof(KeyDiscoveryConvention));
 

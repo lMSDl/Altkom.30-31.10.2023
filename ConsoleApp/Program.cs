@@ -26,6 +26,10 @@ foreach (var order in orders)
     Console.WriteLine(order.Description);
 }
 
+var context = new Context(contextOptions);
+context.AttachRange(orders);
+context.Set<ProductDetails>().Load();
+
 Console.ReadLine();
 
 static void ChangeTracker(DbContextOptions<Context> contextOptions)
@@ -303,7 +307,7 @@ static void Transactions(DbContextOptions<Context> contextOptions, bool randomFa
     context.Database.EnsureDeleted();
     context.Database.EnsureCreated();
 
-    var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x }).ToList();
+    var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x, Detail = new ProductDetails { Weight = x } }).ToList();
     var orders = Enumerable.Range(0, 5).Select(x => 
     new Order
     {

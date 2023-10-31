@@ -44,6 +44,8 @@ namespace Models
             set => _order = value;
         }
 
+        public ProductDetails? Detail { get; set; }
+
         //odpowiednik IsRowVersion w konfiguracji
         //[Timestamp]
         //public byte[] Timestamp { get; set; } // zastąpione przez shadow property

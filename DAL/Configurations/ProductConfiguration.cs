@@ -23,6 +23,8 @@ namespace DAL.Configurations
                     .IsRowVersion();
 
             builder.HasQueryFilter(x => !EF.Property<bool>(x.Order, "IsDeleted"));
+
+            builder.HasOne(x => x.Detail).WithOne().HasForeignKey<ProductDetails>(x => x.Id);
         }
     }
 }

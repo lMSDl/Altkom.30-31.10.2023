@@ -118,6 +118,12 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="OrderSummaryView_DOWN" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Sql\OrderSummaryView_DOWN.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;windows-1250</value>
+  </data>
+  <data name="OrderSummaryView_UP" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Sql\OrderSummaryView_UP.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;windows-1250</value>
+  </data>
   <data name="OrderSummary_DOWN" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Sql\OrderSummary_DOWN.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;windows-1250</value>
   </data>

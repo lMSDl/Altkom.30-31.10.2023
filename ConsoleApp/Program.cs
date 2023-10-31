@@ -31,8 +31,10 @@ context.Database.ExecuteSqlInterpolated($"EXEC ChangePrice {multiplier}");
 var result = context.Set<OrderSummary>().FromSqlRaw("EXEC OrderSummary @p0", 3).ToList();
 
 
-context.Set<Person>().Remove(context.Set<Person>().First());
-context.SaveChanges();
+//context.Set<Person>().Remove(context.Set<Person>().First());
+//context.SaveChanges();
+
+var view = context.Set<OrderSummary>().Where(x => x.Id > 2).ToList();
 
 Console.ReadLine();
 

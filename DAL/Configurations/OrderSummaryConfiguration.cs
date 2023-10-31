@@ -13,7 +13,8 @@ namespace DAL.Configurations
     {
         public void Configure(EntityTypeBuilder<OrderSummary> builder)
         {
-            builder.ToTable((string?)null); //nie tworzymy tabeli dla encji
+            //builder.ToTable((string?)null); //nie tworzymy tabeli dla encji
+            builder.ToView("View_OrderSummary");
         }
     }
 }

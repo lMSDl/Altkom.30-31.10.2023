@@ -5,6 +5,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Models;
+using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 
 
@@ -18,47 +19,26 @@ var contextOptions = new DbContextOptionsBuilder<Context>()
                         .LogTo(Console.WriteLine)
                         .Options;
 
+
+
+Transactions(contextOptions, false);
 using var context = new Context(contextOptions);
-context.Database.EnsureDeleted();
-context.Database.EnsureCreated();
 
-var person = new Person { Name = "Ewa" };
+var orders = context.Set<Order>().AsNoTracking().ToList();
 
-context.Add(person);
-context.SaveChanges();
+var timer = new Stopwatch();
+timer.Start();
+orders = Context.GetOrdersByDateRange(context, DateTime.Now.AddMinutes(-5), DateTime.Now).ToList();
+timer.Stop();
 
-Thread.Sleep(1000);
+Debug.WriteLine(timer.ElapsedTicks);
 
-person.Name = "Ala";
-context.SaveChanges();
+timer.Reset();
+timer.Start();
+orders = Context.GetOrdersByDateRange(context, DateTime.Now.AddMinutes(-5), DateTime.Now).ToList();
+timer.Stop();
 
-
-Thread.Sleep(1000);
-
-person.Name = "Adam";
-context.SaveChanges();
-
-
-Thread.Sleep(1000);
-
-person.Name = "Wojciech";
-context.SaveChanges();
-
-context.ChangeTracker.Clear();
-
-
-var people = context.Set<Person>().ToList();
-
-people = context.Set<Person>().TemporalAll().ToList();
-var data = context.Set<Person>().TemporalAll().Select(x => new { x, FROM = EF.Property<DateTime>(x, "From"), TO = EF.Property<DateTime>(x, "To") }).ToList();
-
-                                            //MS SQL: data zapisywana w UTC
-people = context.Set<Person>().TemporalAsOf(DateTime.UtcNow.AddSeconds(-2)).ToList();
-
-people = context.Set<Person>().TemporalBetween(DateTime.UtcNow.AddSeconds(-4), DateTime.UtcNow.AddSeconds(-2)).ToList();
-
-
-
+Debug.WriteLine(timer.ElapsedTicks);
 
 Console.ReadLine();
 
@@ -415,4 +395,46 @@ static void References(DbContextOptions<Context> contextOptions)
         if (product.Order != null)
             Console.WriteLine("Order != null");
     }
+}
+
+static void TemporalTable(DbContextOptions<Context> contextOptions)
+{
+    var context = new Context(contextOptions);
+    context.Database.EnsureDeleted();
+    context.Database.EnsureCreated();
+
+    var person = new Person { Name = "Ewa" };
+
+    context.Add(person);
+    context.SaveChanges();
+
+    Thread.Sleep(1000);
+
+    person.Name = "Ala";
+    context.SaveChanges();
+
+
+    Thread.Sleep(1000);
+
+    person.Name = "Adam";
+    context.SaveChanges();
+
+
+    Thread.Sleep(1000);
+
+    person.Name = "Wojciech";
+    context.SaveChanges();
+
+    context.ChangeTracker.Clear();
+
+
+    var people = context.Set<Person>().ToList();
+
+    people = context.Set<Person>().TemporalAll().ToList();
+    var data = context.Set<Person>().TemporalAll().Select(x => new { x, FROM = EF.Property<DateTime>(x, "From"), TO = EF.Property<DateTime>(x, "To") }).ToList();
+
+    //MS SQL: data zapisywana w UTC
+    people = context.Set<Person>().TemporalAsOf(DateTime.UtcNow.AddSeconds(-2)).ToList();
+
+    people = context.Set<Person>().TemporalBetween(DateTime.UtcNow.AddSeconds(-4), DateTime.UtcNow.AddSeconds(-2)).ToList();
 }

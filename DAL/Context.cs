@@ -1,6 +1,7 @@
 ﻿using DAL.Conventions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Models;
 using Pluralize.NET.Core;
 using System.Security.Cryptography.X509Certificates;
 
@@ -11,6 +12,16 @@ namespace DAL
 
         public Context(DbContextOptions options) : base(options) {
         }
+
+
+        public static Func<Context, DateTime, DateTime, IEnumerable<Order>> GetOrdersByDateRange { get; } =
+            EF.CompileQuery((Context context, DateTime from, DateTime to) => 
+                context.Set<Order>()
+                .AsNoTracking()
+            .Include(x => x.Products)
+            .Where(x => x.DateTime >= from)
+            .Where(x => x.DateTime <= to));
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
